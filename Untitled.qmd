@@ -1,0 +1,58 @@
+---
+title: "DataScienceAss3"
+format: html
+editor: visual
+---
+
+## Innledning
+
+(oppgavetekst)\
+I denne oppgaven skal vi studere pendle-mønster for en norsk region.
+Vi vil studere et utvalg kommuner i Sør-Rogaland (Nord-Jæren) i perioden 2000 t.o.m. 2021.
+Dataene vil vi i hovedsak hente fra SSB sin statistikktabell 03321, «Sysselsatte (15-74 år), etter arbeidssteds- og bostedskommune.\
+
+Pendlingsstrømmer.
+4.
+kvartal (K) 2000 - 2021».
+Vi skal benytte dataene til å generere grafikk som viser utviklingen i jobbpendling over tid for de ulike kommunene.
+Grafikken vil vi generere vha geom_line() fra ggplot2 pakken (del av tidyverse).
+For geom_line() trenger vi dataene i såkalt «long-format».
+Dette bør vi ta hensyn til alt fra starten av i vår behandling av pendle-dataene.
+I tillegg skal vi generere såkalte pendle-matriser («origin-destination-matrix»).
+I en pendle-matrise vil hver rekke angi hvor de som bor i en kommune arbeider.
+Tilsvarende angir en kolonne hvor de som jobber i en kommune bor.\
+
+I Sør-Rogaland har det også vært kommunesammenslåinger som har gitt oss Nye-Stavanger og Nye-Sandnes fra 2020.
+Vi vil generere konsistente pendle-data for perioden 2000 t.o.m. 2021 som korresponderer med denne nye kommunestrukturen.\
+
+Dataene fra SSB vil vi hente direkte inn i R via pakken PxWebApiData, som gir oss tilgang til SSB via en api.
+Vi vil hente kategorien «Alle kommuner» fra tabell 03321 og selv ta oss av aggregeringen av data til «Nye-Stavanger» og «Nye-Sandnes».Quarto
+
+```{r}
+library(tidyverse)
+library(PxWebApiData)
+library(httr)
+library(rjstat)
+```
+
+```{r}
+#Get more info about table
+ApiData("http://data.ssb.no/api/v0/en/table/03321",
+returnApiQuery = TRUE) 
+
+metadata_03321<- ApiData(
+  "http://data.ssb.no/api/v0/en/table/03321",
+  returnMetaFrames = TRUE)
+
+{ "query": [ { "code": "Bokommuen", "selection": { "filter": "item",  "values": [ "1102", "1103", "1108", "1114", "1119", "1120", "1121", "1122", "1124", "1127", "1129", "1130", "1133", "1141", "1142", "1144" ] } } ], "response": { "format": "json-stat2" } }
+```
+
+```{r}
+url <- "https://data.ssb.no/api/v0/dataset/1066.json?lang=no"
+d.tmp<-GET(url)
+```
+
+```{r}
+bokommuen <- ApiData(03321)
+head(bokommuen [[1]]) 
+```
