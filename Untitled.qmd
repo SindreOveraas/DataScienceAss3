@@ -27,7 +27,7 @@ I Sør-Rogaland har det også vært kommunesammenslåinger som har gitt oss Nye-
 Vi vil generere konsistente pendle-data for perioden 2000 t.o.m. 2021 som korresponderer med denne nye kommunestrukturen.\
 
 Dataene fra SSB vil vi hente direkte inn i R via pakken PxWebApiData, som gir oss tilgang til SSB via en api.
-Vi vil hente kategorien «Alle kommuner» fra tabell 03321 og selv ta oss av aggregeringen av data til «Nye-Stavanger» og «Nye-Sandnes».Quarto
+Vi vil hente kategorien «Alle kommuner» fra tabell 03321 og selv ta oss av aggregeringen av data til «Nye-Stavanger» og «Nye-Sandnes».
 
 ```{r, message=FALSE}
 library(tidyverse)
@@ -37,29 +37,59 @@ library(rjstat)
 ```
 
 ```{r}
-ApiData("http://data.ssb.no/api/v0/en/table/03321",
-returnApiQuery = TRUE) 
+metadata_03321 <- ApiData("http://data.ssb.no/api/v0/en/table/03321",
+returnMetaFrames = TRUE)
+```
 
+```{r}
+ApiData("http://data.ssb.no/api/v0/en/table/03321",
+returnApiQuery = TRUE)
+```
+
+```{r}
 pend_00_21_ssb_boNJ <- PxWebApiData::ApiData(
-  urlToData = "http://data.ssb.no/api/v0/en/table/03321",
-  ArbstedKomm = list("1102", "1103", "1108", "1114", "1119", "1120", "1121", "1122", "1124", "1127", "1129",
-"1130", "1133", "1141", "1142", "1144"),
-  Bokommuen = all(),
-  Tid = c(2000:2021, each = 12)
-    )
+  urlToData = "03321",
+  ArbstedKomm = list('*'),
+  Bokommuen = list(1102, 1103, 1108, 1114, 1119, 1120, 1121, 1122, 1124, 1127, 1129,
+1130, 1133, 1141, 1142, 1144), Tid = as.character(2000:2021))
 ```
 
 ```{r}
 pend_00_21_ssb_arbNJ <- PxWebApiData::ApiData(
-  urlToData = "http://data.ssb.no/api/v0/en/table/03321",
-  ArbstedKomm = all(),
-  Bokommuen = list("1102", "1103", "1108", "1114", "1119", "1120", "1121", "1122", "1124", "1127", "1129",
-"1130", "1133", "1141", "1142", "1144"),
-  Tid = c(2000:2021, each = 12)
-    )
+  urlToData = "03321",
+  ArbstedKomm = list('1102', '1103', '1108', '1114', '1119', '1120', '1121', '1122', '1124', '1127', '1129', '1130', '1133', '1141', '1142', '1144'),
+  Bokommuen = list('*'), Tid = as.character(2000:2021))
 ```
 
 ```{r}
 names(pend_00_21_ssb_boNJ)[1] <- "desc_boNJ"
 names(pend_00_21_ssb_arbNJ)[1] <- "desc_arbNJ"
+```
+
+```{r}
+pend_00_21_boNJ <- pend_00_21_ssb_boNJ$dataset %>%
+  left_join(pend_00_21_ssb_boNJ$desc_boNJ) %>%
+  mutate("akom_navn" = arbeidsstedskommune, "bkom_navn" = bostedskommune, "akom" = ArbstedKomm, "bkom" = Bokommuen, "aar" = Tid, "pendlere" = value) %>%
+  select(aar, akom, akom_navn, bkom, bkom_navn, pendlere) %>%
+  as_tibble()
+```
+
+```{r}
+pend_00_21_arbNJ <- pend_00_21_ssb_arbNJ$dataset %>%
+  left_join(pend_00_21_ssb_arbNJ$desc_arbNJ) %>%
+  mutate("akom_navn" = arbeidsstedskommune, "bkom_navn" = bostedskommune, "akom" = ArbstedKomm, "bkom" = Bokommuen, "aar" = Tid, "pendlere" = value) %>%
+  select(aar, akom, akom_navn, bkom, bkom_navn, pendlere) %>%
+  as_tibble()
+```
+
+```{r}
+print(pend_00_21_boNJ, n = 5)
+```
+
+```{r}
+print(pend_00_21_arbNJ, n = 5)
+```
+
+```{r}
+knr_u_SS <- paste("k", c(1114, 1119, 1120, 1121, 1122, 1124, 1127, 1130, 1144), sep = "")
 ```

@@ -133,7 +133,7 @@ I denne oppgaven skal vi studere pendle-mønster for en norsk region. Vi vil stu
 </p>
 <p>I Sør-Rogaland har det også vært kommunesammenslåinger som har gitt oss Nye-Stavanger og Nye-Sandnes fra 2020. Vi vil generere konsistente pendle-data for perioden 2000 t.o.m. 2021 som korresponderer med denne nye kommunestrukturen.<br>
 </p>
-<p>Dataene fra SSB vil vi hente direkte inn i R via pakken PxWebApiData, som gir oss tilgang til SSB via en api. Vi vil hente kategorien «Alle kommuner» fra tabell 03321 og selv ta oss av aggregeringen av data til «Nye-Stavanger» og «Nye-Sandnes».Quarto</p>
+<p>Dataene fra SSB vil vi hente direkte inn i R via pakken PxWebApiData, som gir oss tilgang til SSB via en api. Vi vil hente kategorien «Alle kommuner» fra tabell 03321 og selv ta oss av aggregeringen av data til «Nye-Stavanger» og «Nye-Sandnes».</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(PxWebApiData)</span>
@@ -141,8 +141,12 @@ I denne oppgaven skal vi studere pendle-mønster for en norsk region. Vi vil stu
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rjstat)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ApiData</span>(<span class="st">"http://data.ssb.no/api/v0/en/table/03321"</span>,</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">returnApiQuery =</span> <span class="cn">TRUE</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>metadata_03321 <span class="ot">&lt;-</span> <span class="fu">ApiData</span>(<span class="st">"http://data.ssb.no/api/v0/en/table/03321"</span>,</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">returnMetaFrames =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ApiData</span>(<span class="st">"http://data.ssb.no/api/v0/en/table/03321"</span>,</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">returnApiQuery =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>{
   "query": [
@@ -180,26 +184,76 @@ I denne oppgaven skal vi studere pendle-mønster for en norsk region. Vi vil stu
   }
 } </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>pend_00_21_ssb_boNJ <span class="ot">&lt;-</span> PxWebApiData<span class="sc">::</span><span class="fu">ApiData</span>(</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">urlToData =</span> <span class="st">"http://data.ssb.no/api/v0/en/table/03321"</span>,</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">ArbstedKomm =</span> <span class="fu">list</span>(<span class="st">"1102"</span>, <span class="st">"1103"</span>, <span class="st">"1108"</span>, <span class="st">"1114"</span>, <span class="st">"1119"</span>, <span class="st">"1120"</span>, <span class="st">"1121"</span>, <span class="st">"1122"</span>, <span class="st">"1124"</span>, <span class="st">"1127"</span>, <span class="st">"1129"</span>,</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="st">"1130"</span>, <span class="st">"1133"</span>, <span class="st">"1141"</span>, <span class="st">"1142"</span>, <span class="st">"1144"</span>),</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">Bokommuen =</span> <span class="fu">all</span>(),</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">Tid =</span> <span class="fu">c</span>(<span class="dv">2000</span><span class="sc">:</span><span class="dv">2021</span>, <span class="at">each =</span> <span class="dv">12</span>)</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>pend_00_21_ssb_arbNJ <span class="ot">&lt;-</span> PxWebApiData<span class="sc">::</span><span class="fu">ApiData</span>(</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">urlToData =</span> <span class="st">"http://data.ssb.no/api/v0/en/table/03321"</span>,</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">ArbstedKomm =</span> <span class="fu">all</span>(),</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">Bokommuen =</span> <span class="fu">list</span>(<span class="st">"1102"</span>, <span class="st">"1103"</span>, <span class="st">"1108"</span>, <span class="st">"1114"</span>, <span class="st">"1119"</span>, <span class="st">"1120"</span>, <span class="st">"1121"</span>, <span class="st">"1122"</span>, <span class="st">"1124"</span>, <span class="st">"1127"</span>, <span class="st">"1129"</span>,</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="st">"1130"</span>, <span class="st">"1133"</span>, <span class="st">"1141"</span>, <span class="st">"1142"</span>, <span class="st">"1144"</span>),</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">Tid =</span> <span class="fu">c</span>(<span class="dv">2000</span><span class="sc">:</span><span class="dv">2021</span>, <span class="at">each =</span> <span class="dv">12</span>)</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>pend_00_21_ssb_boNJ <span class="ot">&lt;-</span> PxWebApiData<span class="sc">::</span><span class="fu">ApiData</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">urlToData =</span> <span class="st">"03321"</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">ArbstedKomm =</span> <span class="fu">list</span>(<span class="st">'*'</span>),</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">Bokommuen =</span> <span class="fu">list</span>(<span class="dv">1102</span>, <span class="dv">1103</span>, <span class="dv">1108</span>, <span class="dv">1114</span>, <span class="dv">1119</span>, <span class="dv">1120</span>, <span class="dv">1121</span>, <span class="dv">1122</span>, <span class="dv">1124</span>, <span class="dv">1127</span>, <span class="dv">1129</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="dv">1130</span>, <span class="dv">1133</span>, <span class="dv">1141</span>, <span class="dv">1142</span>, <span class="dv">1144</span>), <span class="at">Tid =</span> <span class="fu">as.character</span>(<span class="dv">2000</span><span class="sc">:</span><span class="dv">2021</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(pend_00_21_ssb_boNJ)[<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="st">"desc_boNJ"</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(pend_00_21_ssb_arbNJ)[<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="st">"desc_arbNJ"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>pend_00_21_ssb_arbNJ <span class="ot">&lt;-</span> PxWebApiData<span class="sc">::</span><span class="fu">ApiData</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">urlToData =</span> <span class="st">"03321"</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">ArbstedKomm =</span> <span class="fu">list</span>(<span class="st">'1102'</span>, <span class="st">'1103'</span>, <span class="st">'1108'</span>, <span class="st">'1114'</span>, <span class="st">'1119'</span>, <span class="st">'1120'</span>, <span class="st">'1121'</span>, <span class="st">'1122'</span>, <span class="st">'1124'</span>, <span class="st">'1127'</span>, <span class="st">'1129'</span>, <span class="st">'1130'</span>, <span class="st">'1133'</span>, <span class="st">'1141'</span>, <span class="st">'1142'</span>, <span class="st">'1144'</span>),</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">Bokommuen =</span> <span class="fu">list</span>(<span class="st">'*'</span>), <span class="at">Tid =</span> <span class="fu">as.character</span>(<span class="dv">2000</span><span class="sc">:</span><span class="dv">2021</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(pend_00_21_ssb_boNJ)[<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="st">"desc_boNJ"</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(pend_00_21_ssb_arbNJ)[<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="st">"desc_arbNJ"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>pend_00_21_boNJ <span class="ot">&lt;-</span> pend_00_21_ssb_boNJ<span class="sc">$</span>dataset <span class="sc">%&gt;%</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(pend_00_21_ssb_boNJ<span class="sc">$</span>desc_boNJ) <span class="sc">%&gt;%</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="st">"akom_navn"</span> <span class="ot">=</span> arbeidsstedskommune, <span class="st">"bkom_navn"</span> <span class="ot">=</span> bostedskommune, <span class="st">"akom"</span> <span class="ot">=</span> ArbstedKomm, <span class="st">"bkom"</span> <span class="ot">=</span> Bokommuen, <span class="st">"aar"</span> <span class="ot">=</span> Tid, <span class="st">"pendlere"</span> <span class="ot">=</span> value) <span class="sc">%&gt;%</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(aar, akom, akom_navn, bkom, bkom_navn, pendlere) <span class="sc">%&gt;%</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Joining, by = "value"</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>pend_00_21_arbNJ <span class="ot">&lt;-</span> pend_00_21_ssb_arbNJ<span class="sc">$</span>dataset <span class="sc">%&gt;%</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(pend_00_21_ssb_arbNJ<span class="sc">$</span>desc_arbNJ) <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="st">"akom_navn"</span> <span class="ot">=</span> arbeidsstedskommune, <span class="st">"bkom_navn"</span> <span class="ot">=</span> bostedskommune, <span class="st">"akom"</span> <span class="ot">=</span> ArbstedKomm, <span class="st">"bkom"</span> <span class="ot">=</span> Bokommuen, <span class="st">"aar"</span> <span class="ot">=</span> Tid, <span class="st">"pendlere"</span> <span class="ot">=</span> value) <span class="sc">%&gt;%</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(aar, akom, akom_navn, bkom, bkom_navn, pendlere) <span class="sc">%&gt;%</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Joining, by = "value"</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(pend_00_21_boNJ, <span class="at">n =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 141,303,350 × 6
+  aar   akom  akom_navn bkom  bkom_navn pendlere
+  &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;     &lt;chr&gt; &lt;chr&gt;        &lt;int&gt;
+1 2000  3001  Halden    1103  Stavanger        0
+2 2000  3001  Halden    1103  Stavanger        0
+3 2000  3001  Halden    1103  Stavanger        0
+4 2000  3001  Halden    1103  Stavanger        0
+5 2000  3001  Halden    1103  Stavanger        0
+# … with 141,303,345 more rows
+# ℹ Use `print(n = ...)` to see more rows</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(pend_00_21_arbNJ, <span class="at">n =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 72,851,892 × 6
+  aar   akom  akom_navn bkom  bkom_navn pendlere
+  &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;     &lt;chr&gt; &lt;chr&gt;        &lt;int&gt;
+1 2000  1103  Stavanger 3001  Halden           0
+2 2000  1103  Stavanger 3001  Halden           0
+3 2000  1103  Stavanger 3001  Halden           0
+4 2000  1103  Stavanger 3001  Halden           0
+5 2000  1103  Stavanger 3001  Halden           0
+# … with 72,851,887 more rows
+# ℹ Use `print(n = ...)` to see more rows</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>knr_u_SS <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">"k"</span>, <span class="fu">c</span>(<span class="dv">1114</span>, <span class="dv">1119</span>, <span class="dv">1120</span>, <span class="dv">1121</span>, <span class="dv">1122</span>, <span class="dv">1124</span>, <span class="dv">1127</span>, <span class="dv">1130</span>, <span class="dv">1144</span>), <span class="at">sep =</span> <span class="st">""</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 
