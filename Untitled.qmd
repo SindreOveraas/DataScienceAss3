@@ -1,12 +1,13 @@
 ---
-title: "DataScienceAss3"
+title: "Data Science - Assignment 3"
 format: html
 editor: visual
+author: Sindre H. Øveraas, Alen Colakovic, Sebastian M. Fløysand
 ---
 
 ## Innledning
 
-(oppgavetekst)\
+(Oppgavetekst)\
 I denne oppgaven skal vi studere pendle-mønster for en norsk region.
 Vi vil studere et utvalg kommuner i Sør-Rogaland (Nord-Jæren) i perioden 2000 t.o.m. 2021.
 Dataene vil vi i hovedsak hente fra SSB sin statistikktabell 03321, «Sysselsatte (15-74 år), etter arbeidssteds- og bostedskommune.\
@@ -28,7 +29,7 @@ Vi vil generere konsistente pendle-data for perioden 2000 t.o.m. 2021 som korres
 Dataene fra SSB vil vi hente direkte inn i R via pakken PxWebApiData, som gir oss tilgang til SSB via en api.
 Vi vil hente kategorien «Alle kommuner» fra tabell 03321 og selv ta oss av aggregeringen av data til «Nye-Stavanger» og «Nye-Sandnes».Quarto
 
-```{r}
+```{r, message=FALSE}
 library(tidyverse)
 library(PxWebApiData)
 library(httr)
@@ -36,23 +37,29 @@ library(rjstat)
 ```
 
 ```{r}
-#Get more info about table
 ApiData("http://data.ssb.no/api/v0/en/table/03321",
 returnApiQuery = TRUE) 
 
-metadata_03321<- ApiData(
-  "http://data.ssb.no/api/v0/en/table/03321",
-  returnMetaFrames = TRUE)
-
-{ "query": [ { "code": "Bokommuen", "selection": { "filter": "item",  "values": [ "1102", "1103", "1108", "1114", "1119", "1120", "1121", "1122", "1124", "1127", "1129", "1130", "1133", "1141", "1142", "1144" ] } } ], "response": { "format": "json-stat2" } }
+pend_00_21_ssb_boNJ <- PxWebApiData::ApiData(
+  urlToData = "http://data.ssb.no/api/v0/en/table/03321",
+  ArbstedKomm = list("1102", "1103", "1108", "1114", "1119", "1120", "1121", "1122", "1124", "1127", "1129",
+"1130", "1133", "1141", "1142", "1144"),
+  Bokommuen = all(),
+  Tid = c(2000:2021, each = 12)
+    )
 ```
 
 ```{r}
-url <- "https://data.ssb.no/api/v0/dataset/1066.json?lang=no"
-d.tmp<-GET(url)
+pend_00_21_ssb_arbNJ <- PxWebApiData::ApiData(
+  urlToData = "http://data.ssb.no/api/v0/en/table/03321",
+  ArbstedKomm = all(),
+  Bokommuen = list("1102", "1103", "1108", "1114", "1119", "1120", "1121", "1122", "1124", "1127", "1129",
+"1130", "1133", "1141", "1142", "1144"),
+  Tid = c(2000:2021, each = 12)
+    )
 ```
 
 ```{r}
-bokommuen <- ApiData(03321)
-head(bokommuen [[1]]) 
+names(pend_00_21_ssb_boNJ)[1] <- "desc_boNJ"
+names(pend_00_21_ssb_arbNJ)[1] <- "desc_arbNJ"
 ```
